@@ -1,4 +1,5 @@
 import time
+import asyncio
 from random import randint
 import board
 from adafruit_clue import clue
@@ -23,38 +24,51 @@ group.append(right_label)
 
 board.DISPLAY.root_group = group
 
-notes = []
+left_notes = []
+right_notes = []
+count = 0
 
 update_on_cooldown = False
 note_spawn_on_cooldown = False
 
-def update():
-    global update_on_cooldown
-    if not update_on_cooldown:
-        update_on_cooldown = True
-        for note in notes:
-            note.x -= 20
-        time.sleep(1000)
-        update_on_cooldown = False
+async def update():
+    while True:
+        global update_on_cooldown
+        if not update_on_cooldown:
+            update_on_cooldown = True
+            for note in left_notes:
+                note.y += 1
+            for note in right_notes:
+                note.y += 1
+            await asyncio.sleep(0.1)
+            update_on_cooldown = False
 
-def spawn_note(type):
-    global note_spawn_on_cooldown
-    if not note_spawn_on_cooldown:
-        note_spawn_on_cooldown = True
-        note = label.Label(font, x=80, y=0, text='{type}', color=font_color)
-        group.append(note)
-        time.sleep(2000)
-        note_spawn_on_cooldown = False
+async def spawn_note(type):
+    while True:
+        global note_spawn_on_cooldown, count
+        if not note_spawn_on_cooldown:
+            note_spawn_on_cooldown = True
+            count += 1
+            x_value = 80 if count % 2 == 0 else 140
+            note = label.Label(font, x=x_value, y=0, text=f'{type}', color=font_color)
+            left_notes.append(note) if x_value == 80 else right_notes.append(note)
+            group.append(note)
+            await asyncio.sleep(3)
+            note_spawn_on_cooldown = False
 
-while True:
-    left_button.update()
-    right_button.update()
+async def main():
+    await asyncio.gather(spawn_note("x"), update())
 
-    if left_button.rose:
-        print("a")
-    elif right_button.rose:
-        print("b")
+    while True:
+        left_button.update()
+        right_button.update()
 
-    spawn_note("x")
-    update()
+        if left_button.rose:
+            try:
+                for i in range(1, 50):
+                    print("save")
+        elif right_button.rose:
+            print("b")
 
+if __name__ == "__main__":
+    asyncio.run(main())
