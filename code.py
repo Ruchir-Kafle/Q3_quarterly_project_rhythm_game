@@ -56,19 +56,33 @@ async def spawn_note(type):
             await asyncio.sleep(3)
             note_spawn_on_cooldown = False
 
-async def main():
-    await asyncio.gather(spawn_note("x"), update())
+def register_inputs(value):
+    try:
+        for i in range(0, 9):
+            if group[i].x == value:
+                for child in group:
+                    print(child)
+                print(i)
+                print(group[i])
+                group.remove(i)
+                break
+    except IndexError:
+        print("bad")
 
+async def main():
     while True:
         left_button.update()
         right_button.update()
 
         if left_button.rose:
-            try:
-                for i in range(1, 50):
-                    print("save")
+            register_inputs(80)
         elif right_button.rose:
-            print("b")
+            register_inputs(140)
+
+        await asyncio.sleep(0.00001)
+
+async def start():
+    await asyncio.gather(spawn_note("x"), update(), main())
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(start())
